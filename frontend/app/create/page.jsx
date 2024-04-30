@@ -21,19 +21,40 @@ const CreatePod = () => {
         setFormData((prev) => ({ ...prev, [name]: value }));
     };
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         console.log("Form Data Submitted: ", formData);
-        // Here you would typically handle the API call to create a pod
+
+        try {
+            const response = await fetch('http://localhost:4001/dockerImageName', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    dockerHubImage: formData.dockerhubImage,
+                    appName: formData.appName,
+                    replicas: formData.numberOfReplicas,
+                    command: formData.triggerCommand,
+                }),
+            });
+
+            const result = await response.json();
+            if (response.ok) {
+                console.log("Pod created successfully:", result);
+            } else {
+                throw new Error(result.message || 'Failed to create the pod');
+            }
+        } catch (error) {
+            console.error("Error creating pod:", error);
+        }
     };
 
     return (
         <Dashboard>
             <div className="flex justify-center items-start pt-20 min-h-screen bg-gray-100">
-                {/* Adjusted for no exact centering and to fit the form nicely */}
                 <div className="max-w-4xl w-full px-4 sm:px-6 lg:px-8">
-                    <p className="text-xl text-gray-700 mb-4">Create a Pod</p>{" "}
-                    {/* Title added directly above the form */}
+                    <p className="text-xl text-gray-700 mb-4">Create a Pod</p>
                     <form
                         onSubmit={handleSubmit}
                         className="space-y-6 bg-white p-8 shadow-lg rounded-lg"
