@@ -2,16 +2,16 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: test-demo30-deployment-20231130155638
+  name: test-demo-suc-deployment-20240515224441
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: test-demo30-20231130155638
+      app: test-demo-suc-20240515224441
   template:
     metadata:
       labels:
-        app: test-demo30-20231130155638
+        app: test-demo-suc-20240515224441
     spec:
       containers:
       - name: mnist-data

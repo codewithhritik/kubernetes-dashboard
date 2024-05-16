@@ -9,6 +9,7 @@ import {
     CubeTransparentIcon,
     XCircleIcon,
     GlobeAltIcon,
+    PresentationChartLineIcon,
 } from "@heroicons/react/24/solid";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
@@ -16,13 +17,19 @@ import Link from "next/link";
 const menuItems = [
     { id: 1, label: "Home", icon: HomeIcon, link: "/dashboard" },
     { id: 2, label: "Create Pod", icon: PlusCircleIcon, link: "/create" },
+    // {
+    //     id: 3,
+    //     label: "Trigger Pod",
+    //     icon: CubeTransparentIcon,
+    //     link: "/dashboard",
+    // },
+    { id: 4, label: "Delete Pod", icon: XCircleIcon, link: "/delete" },
     {
-        id: 3,
-        label: "Trigger Pod",
-        icon: CubeTransparentIcon,
-        link: "/dashboard",
+        id: 5,
+        label: "Pods Status",
+        icon: PresentationChartLineIcon,
+        link: "/pod-status",
     },
-    { id: 4, label: "Delete Pod", icon: XCircleIcon, link: "/dashboard" },
 ];
 
 export default function Sidebar({}) {

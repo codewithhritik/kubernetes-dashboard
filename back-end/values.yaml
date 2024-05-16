@@ -1,0 +1,34 @@
+
+proxy:
+  secretToken: "e93150218017d94f39b140ff345cc0e3fa3e9bc9584632a98d58e63a38e214bd"
+
+singleuser:
+  defaultUrl: "/lab"
+  image:
+    name: jupyter/minimal-notebook
+    tag: d4cbf2f80a2a
+  profileList:
+    - display_name: "Minimal Notebook environment"
+      description: "Notebooks with only PYTHON installed"
+      default: true
+    - display_name: "Test MNIST"
+      description: "MNIST test notebook"
+      kubespawner_override:
+        image: sarvagya23/mnist-fix:1.0
+  storage:
+    type: none
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - user1
+        - user2
+      allowed_users:
+        - user3
+        - user4
+    
+    DummyAuthenticator:
+      password: a-shared-secret-password
+    JupyterHub:
+      authenticator_class: dummy

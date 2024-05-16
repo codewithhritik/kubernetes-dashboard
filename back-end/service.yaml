@@ -2,10 +2,10 @@
 apiVersion: v1
 kind: Service
 metadata:
-  name: test-demo30-service-20231130155638
+  name: test-demo-suc-service-20240515224441
 spec:
   selector:
-    app: test-demo30-20231130155638
+    app: test-demo-suc-20240515224441
   ports:
   - protocol: TCP
     port: 5000

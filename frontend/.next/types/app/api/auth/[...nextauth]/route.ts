@@ -1,4 +1,4 @@
-// File: /Users/hrithik/Desktop/suchi-next/k3s-dashboard/frontend/app/api/auth/[...nextauth]/route.js
+// File: /Users/hrithik/Desktop/kubernetes/k3s-dashboard/frontend/app/api/auth/[...nextauth]/route.js
 import * as entry from '../../../../../../app/api/auth/[...nextauth]/route.js'
 import type { NextRequest } from 'next/server.js'
 

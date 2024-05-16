@@ -43,6 +43,78 @@ type CodeFiles struct {
 	TriggerCmd                string `json:"triggerCmd"`
 }
 
+func generateValuesYAML(imageTag string) string {
+    valuesYAML := fmt.Sprintf(`
+proxy:
+  secretToken: "%s"
+
+singleuser:
+  defaultUrl: "/lab"
+  image:
+    name: jupyter/minimal-notebook
+    tag: d4cbf2f80a2a
+  profileList:
+    - display_name: "Minimal Notebook environment"
+      description: "Notebooks with only PYTHON installed"
+      default: true
+    - display_name: "Test MNIST"
+      description: "MNIST test notebook"
+      kubespawner_override:
+        image: %s
+  storage:
+    type: none
+
+hub:
+  config:
+    Authenticator:
+      admin_users:
+        - user1
+        - user2
+      allowed_users:
+        - user3
+        - user4
+    
+    DummyAuthenticator:
+      password: a-shared-secret-password
+    JupyterHub:
+      authenticator_class: dummy
+`, "e93150218017d94f39b140ff345cc0e3fa3e9bc9584632a98d58e63a38e214bd", imageTag)
+
+    return valuesYAML
+}
+
+func saveValuesYAML(valuesYAML, saveLocation string) error {
+    file, err := os.Create(saveLocation)
+    if err != nil {
+        return err
+    }
+    defer file.Close()
+
+    _, err = file.WriteString(valuesYAML)
+    return err
+}
+
+func startJupyterHub(valuesFilePath string) {
+    cmd := exec.Command("helm", "upgrade", "--install", "jupyterhub", "jupyterhub/jupyterhub", "--values", valuesFilePath)
+    cmd.Stdout = os.Stdout
+    cmd.Stderr = os.Stderr
+    if err := cmd.Run(); err != nil {
+        log.Fatalf("Failed to start JupyterHub: %s", err)
+    }
+    fmt.Println("JupyterHub started successfully!")
+}
+
+func createPodsAndStartJupyterHub(name, fileLocation, imageTag string, replicaCount int) {
+    createPods(name, fileLocation, imageTag, replicaCount)
+    valuesYAML := generateValuesYAML(imageTag)
+    saveLocation := "./values.yaml"
+    err := saveValuesYAML(valuesYAML, saveLocation)
+    if err != nil {
+        log.Fatalf("Failed to save values.yaml: %s", err)
+    }
+    startJupyterHub(saveLocation)
+}
+
 func generateDockerfile(baseImage, appLocation, requirementsFile, triggerCommand string) string {
 	dockerfile := fmt.Sprintf(`
 FROM %s
@@ -181,6 +253,100 @@ func main() {
 		return c.SendString("OK")
 	})
 
+	// GET Route to fetch status of all Kubernetes pods
+	app.Get("/podsStatus", func(c *fiber.Ctx) error {
+		// Command to fetch all pods with their statuses
+		cmd := exec.Command("kubectl", "get", "pods", "-A", "--output=json")
+
+		// Execute the command and capture the output
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+
+		if err != nil {
+			log.Printf("Error getting pods status: %s\n", stderr.String())
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to fetch pods status",
+				"details": stderr.String(),
+			})
+		}
+
+		// Output will be in JSON format, you can directly forward this JSON
+		// or parse and format it as per your frontend needs
+		return c.Status(fiber.StatusOK).SendString(out.String())
+	})
+
+	// Route to fetch all Kubernetes deployments in JSON format
+	app.Get("/getDeployments", func(c *fiber.Ctx) error {
+		cmd := exec.Command("kubectl", "get", "deployments", "--output=json")
+
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+
+		if err != nil {
+			log.Printf("Error getting deployments: %s\n", stderr.String())
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to fetch deployments",
+				"details": stderr.String(),
+			})
+		}
+
+		return c.Status(fiber.StatusOK).SendString(out.String())
+	})
+
+	// Route to fetch all Kubernetes services in JSON format
+	app.Get("/getServices", func(c *fiber.Ctx) error {
+		cmd := exec.Command("kubectl", "get", "services", "--output=json")
+
+		var out bytes.Buffer
+		var stderr bytes.Buffer
+		cmd.Stdout = &out
+		cmd.Stderr = &stderr
+		err := cmd.Run()
+
+		if err != nil {
+			log.Printf("Error getting services: %s\n", stderr.String())
+			return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+				"error": "Failed to fetch services",
+				"details": stderr.String(),
+			})
+		}
+
+		return c.Status(fiber.StatusOK).SendString(out.String())
+	})
+
+	// Delete Kubernetes resource (deployment or service) based on parameters
+    app.Delete("/delete/:type/:name", func(c *fiber.Ctx) error {
+        resourceType := c.Params("type") // 'deployments' or 'services'
+        resourceName := c.Params("name") // the specific name of the deployment or service
+
+        // Validate the resource type to ensure it's either 'deployments' or 'services'
+        if resourceType != "deployments" && resourceType != "services" {
+            return c.Status(fiber.StatusBadRequest).JSON(fiber.Map{"error": "Invalid resource type"})
+        }
+
+        // Execute the kubectl command to delete the specified resource
+        cmd := exec.Command("kubectl", "delete", resourceType, resourceName)
+        output, err := cmd.CombinedOutput()
+        if err != nil {
+            log.Printf("Failed to delete %s %s: %s", resourceType, resourceName, string(output))
+            return c.Status(fiber.StatusInternalServerError).JSON(fiber.Map{
+                "error": fmt.Sprintf("Failed to delete %s %s: %s", resourceType, resourceName, string(output)),
+            })
+        }
+
+        return c.JSON(fiber.Map{
+            "success": true,
+            "message": fmt.Sprintf("%s %s deleted successfully", resourceType, resourceName),
+        })
+    })
+
+
 	//post for dockerhub image
 	app.Post("/dockerImageName", func(c *fiber.Ctx) error {
 		var req DockerImage
@@ -203,7 +369,7 @@ func main() {
 		fmt.Println(command)
 
 		// commenting below code for now
-		createPods(appName, command, dockerHubImage, replicas)
+		createPodsAndStartJupyterHub(appName, command, dockerHubImage, replicas)
 
 		// all the pod creation logic goes here
 		return c.JSON(fiber.Map{

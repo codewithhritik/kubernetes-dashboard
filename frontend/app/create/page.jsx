@@ -26,24 +26,27 @@ const CreatePod = () => {
         console.log("Form Data Submitted: ", formData);
 
         try {
-            const response = await fetch('http://localhost:4001/dockerImageName', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    dockerHubImage: formData.dockerhubImage,
-                    appName: formData.appName,
-                    replicas: formData.numberOfReplicas,
-                    command: formData.triggerCommand,
-                }),
-            });
+            const response = await fetch(
+                "http://localhost:4001/dockerImageName",
+                {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                        dockerHubImage: formData.dockerhubImage,
+                        appName: formData.appName,
+                        replicas: formData.numberOfReplicas,
+                        command: formData.triggerCommand,
+                    }),
+                }
+            );
 
             const result = await response.json();
             if (response.ok) {
                 console.log("Pod created successfully:", result);
             } else {
-                throw new Error(result.message || 'Failed to create the pod');
+                throw new Error(result.message || "Failed to create the pod");
             }
         } catch (error) {
             console.error("Error creating pod:", error);
@@ -54,7 +57,9 @@ const CreatePod = () => {
         <Dashboard>
             <div className="flex justify-center items-start pt-20 min-h-screen bg-gray-100">
                 <div className="max-w-4xl w-full px-4 sm:px-6 lg:px-8">
-                    <p className="text-xl text-gray-700 mb-4">Create a Pod</p>
+                    <p className="text-xl font-bold mb-4 text-gray-800">
+                        Create a Pod
+                    </p>
                     <form
                         onSubmit={handleSubmit}
                         className="space-y-6 bg-white p-8 shadow-lg rounded-lg"
@@ -74,6 +79,7 @@ const CreatePod = () => {
                                 className={inputStyleClasses}
                                 value={formData.dockerhubImage}
                                 onChange={handleChange}
+                                placeholder="hritikdock/hello-world:latest"
                             />
                         </div>
                         <div>
@@ -91,6 +97,7 @@ const CreatePod = () => {
                                 className={inputStyleClasses}
                                 value={formData.appName}
                                 onChange={handleChange}
+                                placeholder="hello-world"
                             />
                         </div>
                         <div>
@@ -108,6 +115,7 @@ const CreatePod = () => {
                                 className={inputStyleClasses}
                                 value={formData.numberOfReplicas}
                                 onChange={handleChange}
+                                placeholder="1"
                             />
                         </div>
                         <div>
@@ -125,6 +133,7 @@ const CreatePod = () => {
                                 className={inputStyleClasses}
                                 value={formData.triggerCommand}
                                 onChange={handleChange}
+                                placeholder="app.py"
                             />
                         </div>
                         <div>

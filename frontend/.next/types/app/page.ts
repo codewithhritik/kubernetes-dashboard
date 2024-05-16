@@ -1,4 +1,4 @@
-// File: /Users/hrithik/Desktop/suchi-next/k3s-dashboard/frontend/app/page.jsx
+// File: /Users/hrithik/Desktop/kubernetes/k3s-dashboard/frontend/app/page.jsx
 import * as entry from '../../../app/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 

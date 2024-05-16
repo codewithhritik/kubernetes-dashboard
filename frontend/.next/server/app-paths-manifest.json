@@ -1,6 +1,9 @@
 {
-  "/dashboard/page": "app/dashboard/page.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/create/page": "app/create/page.js",
+  "/delete/page": "app/delete/page.js",
+  "/register/page": "app/register/page.js",
   "/page": "app/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js"
+  "/dashboard/page": "app/dashboard/page.js",
+  "/pod-status/page": "app/pod-status/page.js"
 }
